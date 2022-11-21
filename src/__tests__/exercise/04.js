@@ -11,10 +11,9 @@ test('submitting the form calls onSubmit with username and password', async () =
   const userName = 'userName'
   const userPassword = 'userPassword'
 
-  let submittedData
-  const handleSubmit = data => (submittedData = data)
+  const handleSubmitMock = jest.fn().mockName('handleSubmit');
 
-  render(<Login onSubmit={handleSubmit} />)
+  render(<Login onSubmit={handleSubmitMock} />)
 
   const username = screen.getByLabelText(/username/i)
   const password = screen.getByLabelText(/password/i)
@@ -23,7 +22,7 @@ test('submitting the form calls onSubmit with username and password', async () =
   await user.type(password, userPassword)
 
   await user.click(screen.getByRole('button'))
-  expect(submittedData).toStrictEqual({
+  expect(handleSubmitMock).toHaveBeenCalledWith({
     password: userPassword,
     username: userName,
   })
