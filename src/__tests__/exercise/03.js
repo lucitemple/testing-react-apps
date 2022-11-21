@@ -17,9 +17,9 @@ test('counter increments and decrements when the buttons are clicked', async () 
     name: 'Increment',
   })
 
-  const message = screen.getByText('Current count: 0')
+  const message = screen.getByText(/current count/i)
 
-  expect(message).toBeInTheDocument()
+  expect(message).toHaveTextContent('Current count: 0')
   await user.click(increment)
   expect(message).toHaveTextContent('Current count: 1')
   await user.click(decrement)
