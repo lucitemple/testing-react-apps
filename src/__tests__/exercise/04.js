@@ -6,11 +6,13 @@ import {render, screen} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Login from '../../components/login'
 import {faker} from '@faker-js/faker'
+import '@testing-library/jest-dom'
 
-const buildLoginForm = () => {
+const buildLoginForm = overrides => {
   return {
     username: faker.internet.userName(),
     password: faker.internet.password(),
+    ...overrides,
   }
 }
 
@@ -22,17 +24,18 @@ test('submitting the form calls onSubmit with username and password', async () =
 
   render(<Login onSubmit={handleSubmitMock} />)
 
-  const usernameInput = screen.getByLabelText(/username/i)
+  const usernameInput = screen.getByRole('textbox', {name: /username/i})
   const passwordInput = screen.getByLabelText(/password/i)
 
   await user.type(usernameInput, username)
   await user.type(passwordInput, password)
 
-  await user.click(screen.getByRole('button'))
+  await user.click(screen.getByRole('button', {name: /submit/i}))
   expect(handleSubmitMock).toHaveBeenCalledWith({
     password,
     username,
   })
+  expect(handleSubmitMock).toHaveBeenCalledTimes(1)
 })
 
 /*
