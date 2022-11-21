@@ -8,6 +8,7 @@ import {build, fake} from '@jackfranklin/test-data-bot'
 import {setupServer} from 'msw/node'
 import Login from '../../components/login-submission'
 import {handlers} from '../../test/server-handlers'
+import {rest} from 'msw'
 
 const buildLoginForm = build({
   fields: {
@@ -19,6 +20,7 @@ const buildLoginForm = build({
 const server = setupServer(...handlers)
 
 beforeAll(() => server.listen())
+afterEach(() => server.resetHandlers())
 afterAll(() => server.close())
 
 test(`logging in displays the user's username`, async () => {
@@ -46,4 +48,23 @@ test('omitting the password displays error message', async () => {
   expect(screen.getByRole('alert').textContent).toMatchInlineSnapshot(
     `"password required"`,
   )
+})
+
+test('unkown server errors displays the error message', async () => {
+  const testErrorMessage = 'server error'
+  server.use(
+    rest.post(
+      'https://auth-provider.example.com/api/login',
+      async (req, res, ctx) => {
+        return res(ctx.status(500), ctx.json({message: testErrorMessage}))
+      },
+    ),
+  )
+  render(<Login />)
+
+  await userEvent.click(screen.getByRole('button', {name: /submit/i}))
+
+  await waitForElementToBeRemoved(screen.getByLabelText(/loading/i))
+  screen.debug()
+  expect(screen.getByRole('alert')).toHaveTextContent(testErrorMessage)
 })
