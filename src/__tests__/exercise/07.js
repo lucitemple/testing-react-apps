@@ -6,12 +6,17 @@ import {render, screen} from '@testing-library/react'
 import {ThemeProvider} from '../../components/theme'
 import EasyButton from '../../components/easy-button'
 
-test('renders with the light styles for the light theme', () => {
+const renderWithTheme = (theme = 'light') => {
   const Wrapper = ({children}) => (
-    <ThemeProvider initialTheme="light">{children}</ThemeProvider>
+    <ThemeProvider initialTheme={theme}>{children}</ThemeProvider>
   )
 
   render(<EasyButton>Easy</EasyButton>, {wrapper: Wrapper})
+}
+
+test('renders with the light styles for the light theme', () => {
+  renderWithTheme('light')
+
   const button = screen.getByRole('button', {name: /easy/i})
   expect(button).toHaveStyle(`
     background-color: white;
@@ -19,11 +24,8 @@ test('renders with the light styles for the light theme', () => {
   `)
 })
 test('renders with the dark styles for the dark theme', () => {
-  const Wrapper = ({children}) => (
-    <ThemeProvider initialTheme="dark">{children}</ThemeProvider>
-  )
+  renderWithTheme('dark')
 
-  render(<EasyButton>Easy</EasyButton>, {wrapper: Wrapper})
   const button = screen.getByRole('button', {name: /easy/i})
   screen.debug()
   expect(button).toHaveStyle(`
