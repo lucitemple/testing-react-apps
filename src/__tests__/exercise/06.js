@@ -7,7 +7,6 @@ import Location from '../../examples/location'
 import {useCurrentPosition as useCurrentPositionMock} from 'react-use-geolocation'
 jest.mock('react-use-geolocation')
 
-
 beforeAll(() => {
   window.navigator.geolocation = {
     getCurrentPosition: jest.fn(),
@@ -15,7 +14,6 @@ beforeAll(() => {
 })
 
 test('displays the users current location', async () => {
-
   const latitude = 35
   const longitude = 139
   const fakePosition = {
@@ -48,6 +46,37 @@ test('displays the users current location', async () => {
   expect(screen.getByText(/longitude/i)).toHaveTextContent(
     `Longitude: ${longitude}`,
   )
+})
+test('displays an error message if an error', async () => {
+  const fakePosition = {
+    coords: {
+      latitude: 35,
+      longitude: 139,
+    },
+  }
+  const fakeError = new Error(
+    'Geolocation is not supported or permission denied',
+  )
+
+  let setReturnValue
+  function useMockCurrentPosition() {
+    const state = React.useState([])
+    setReturnValue = state[1]
+    return state[0]
+  }
+
+  useCurrentPositionMock.mockImplementation(useMockCurrentPosition)
+
+  render(<Location />)
+  expect(screen.getByLabelText(/loading/i)).toBeInTheDocument()
+
+  act(() => {
+    setReturnValue([fakePosition, fakeError])
+  })
+
+  expect(screen.queryByLabelText(/loading/i)).not.toBeInTheDocument()
+
+  expect(screen.getByRole('alert')).toHaveTextContent(fakeError.message)
 })
 
 /*
