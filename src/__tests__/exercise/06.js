@@ -4,8 +4,9 @@
 import * as React from 'react'
 import {render, screen, act} from '@testing-library/react'
 import Location from '../../examples/location'
-import '@testing-library/jest-dom'
-// jest.mock('react-use-geolocation');
+import {useCurrentPosition as useCurrentPositionMock} from 'react-use-geolocation'
+jest.mock('react-use-geolocation')
+
 
 beforeAll(() => {
   window.navigator.geolocation = {
@@ -13,18 +14,8 @@ beforeAll(() => {
   }
 })
 
-// 💰 I'm going to give you this handy utility function
-// it allows you to create a promise that you can resolve/reject on demand.
-function deferred() {
-  let resolve, reject
-  const promise = new Promise((res, rej) => {
-    resolve = res
-    reject = rej
-  })
-  return {promise, resolve, reject}
-}
-
 test('displays the users current location', async () => {
+
   const latitude = 35
   const longitude = 139
   const fakePosition = {
@@ -34,25 +25,29 @@ test('displays the users current location', async () => {
     },
   }
 
-  const {promise, resolve} = deferred()
+  let setReturnValue
+  function useMockCurrentPosition() {
+    const state = React.useState([])
+    setReturnValue = state[1]
+    return state[0]
+  }
 
-  window.navigator.geolocation.getCurrentPosition.mockImplementation(
-    callback => {
-      promise.then(() => callback(fakePosition))
-    },
-  )
+  useCurrentPositionMock.mockImplementation(useMockCurrentPosition)
 
   render(<Location />)
   expect(screen.getByLabelText(/loading/i)).toBeInTheDocument()
-  
- await act(async () => {
-   resolve()
-   await promise
- })
+
+  act(() => {
+    setReturnValue([fakePosition])
+  })
 
   expect(screen.queryByLabelText(/loading/i)).not.toBeInTheDocument()
-  expect(screen.getByText(/latitude/i)).toHaveTextContent(`Latitude: ${latitude}`)
-  expect(screen.getByText(/longitude/i)).toHaveTextContent(`Longitude: ${longitude}`)
+  expect(screen.getByText(/latitude/i)).toHaveTextContent(
+    `Latitude: ${latitude}`,
+  )
+  expect(screen.getByText(/longitude/i)).toHaveTextContent(
+    `Longitude: ${longitude}`,
+  )
 })
 
 /*
